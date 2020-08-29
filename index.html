@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Uspeek's Playground</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.0/css/bulma.min.css" integrity="sha512-ADrqa2PY1TZtb/MoLZIZu/Z/LlPaWQeDMBV73EMwjGam43/JJ5fqW38Rq8LJOVGCDfrJeOMS3Q/wRUVzW5DkjQ==" crossorigin="anonymous" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js" integrity="sha512-U6K1YLIFUWcvuw5ucmMtT9HH4t0uz3M366qrF5y4vnyH6dgDzndlcGvH/Lz5k8NFh80SN95aJ5rqGZEdaQZ7ZQ==" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/4.0.1/mustache.min.js" integrity="sha512-6AXIWogbKpsHvoZJrJtHpIYES4wP8czSj0zk7ZfwOYS8GWYFNSykwdfapt7yQc4ikZytemBu+QyVObzBHJMwYg==" crossorigin="anonymous"></script>
+	<style>
+	</style>
+</head>
+<body>
+	<section class="section">
+		<div class="container content">
+			<div class="has-text-centered">
+				<h2>Recent games</h2>
+			</div>
+			<div id="matches"></div>
+		</div>
+	</section>
+<script id="match-template" type="x-tmpl-mustache">
+<div class="box">
+	<div class="has-text-centered">
+		<p>{{date}}</p>
+		<p>{{map}}</p>
+	</div>
+
+	<div class="columns">
+		{{#teams}}
+		<div class="column">
+			<div class="has-text-centered">
+				<strong>Team {{name}} - <span class="title">{{score}}</span></strong>{{#winner}} <span class="tag is-link">Winner</span>{{/winner}}
+			</div>
+			<table class="table is-narrow is-hoverable">
+				<thead>
+					<tr>
+						<th></th>
+						<th width="8.3333%">K</th>
+						<th width="8.3333%">A</th>
+						<th width="8.3333%">D</th>
+						<th width="8.3333%">MVP</th>
+						<th width="8.3333%">Score</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{#players}}
+					<tr>
+						<td>{{#fancylink}}<a href="https://steamcommunity.com/profiles/{{steamid}}" target="_blank" title="Steam">{{/fancylink}}{{playername}}{{#fancylink}}</a>{{/fancylink}}{{#isbot}} <span class="tag">BOT</span>{{/isbot}}</td>
+						<td>{{kills}}</td>
+						<td>{{assists}}</td>
+						<td>{{deaths}}</td>
+						<td>{{mvps}}</td>
+						<td>{{score}}</td>
+					</tr>
+					{{/players}}
+				</tbody>
+			</table>
+		</div>
+		{{/teams}}
+	</div>
+</div>
+</script>
+<script type="text/javascript">
+$(document).ready(function(){
+	$.ajax({
+		url: 'recentmatches.php',
+		type: 'GET',
+		success: function(data){
+			$.each(data, function(i,o){
+				for(i=0; i<2; i++){
+					o.teams[i].name = i+1;
+					$.each(o.teams[i].players, function(j,k){
+						if(k.steamid != "BOT" && k.steamid != "MAN"){
+							k.fancylink = true;
+						}
+						if(k.steamid == "BOT"){k.isbot = true;}
+					})
+				}
+				
+				console.log(o.teams[0].score + " <1:2> " + o.teams[1].score);
+				if(parseInt(o.teams[0].score) > parseInt(o.teams[1].score)){
+					o.teams[0].winner = true; 
+					o.teams[1].winner = false;
+				}else{
+					o.teams[0].winner = false;
+					o.teams[1].winner = true;
+				}
+				console.log(o);
+				var matchtemplate = document.getElementById('match-template').innerHTML;
+				var render = Mustache.render(matchtemplate, o);
+				$("#matches").append(render);
+			})
+		}
+	});
+})
+</script>
+</body>
+</html>
